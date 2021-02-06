@@ -1,0 +1,11 @@
+spec:
+  containers:
+    - name: api
+      image: dvparshin/otus-reddit:1.0
+      ports:
+        - 9292:9292
+      securityContext:
+        privileged: false
+      tty: false
+      stdin: false
+      restartPolicy: Always
