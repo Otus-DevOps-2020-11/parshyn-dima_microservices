@@ -1,0 +1,12 @@
+---
+- hosts: docker
+  become: true
+
+  tasks:
+  - name: Start container
+    docker_container:
+      name: reddit
+      image: dvparshin/otus-reddit:1.0
+      state: started
+      ports:
+      - "9292:9292"
