@@ -168,8 +168,8 @@ docker run --name reddit -d -p 9292:9292 <your-login>/otus-reddit:1.0
 ```
 
 Задание со *
-Terraform
-Для развертывания приложения использовал Образ Container Optimized Image
+Terraform  
+Для развертывания приложения использовал Образ Container Optimized Image  
 Docker-контейнер в Container Optimized Image описывается в спецификации (YAML-файле) spec.yml где указал, что необходимо использовать ранее созданный образ и пробросить порт 9292. Приложение будет доступно http://<Внешний _IP>:9292. Для запуска необходимо перейти в директорию infra/terraform
 ```
 terraform init
@@ -177,7 +177,7 @@ terraform plan
 terraform apply
 ```
 
-Ansible
+Ansible  
 ВМ развертываются в YC с помощью terraform. На основе данных terraform формируется файл hosts, используется шаблон hosts.tpl. Далее выполняется провиженер и запускаются плайбуки install_docker.yml, run_container.yml. Приложение будет доступно http://<Внешний _IP>:9292. Для запуска необходимо перейти в каталог infra/ansible/terraform
 ```
 terraform init
@@ -185,7 +185,7 @@ terraform plan
 terraform apply
 ```
 
-Packer
+Packer  
 При сборке образа вначале выполняется провиженер, который запускает bash скрипт на локальной машине (ansible/inventory.sh) скрипт, создающий инвентори файл ansible/hosts. Далее запускается провиженер, который устанавливает docker. Запускать сборку необходимо из директории infra
 ```
 packer build -var-file=packer/variables.json packer/docker.json
