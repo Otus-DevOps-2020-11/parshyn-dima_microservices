@@ -193,10 +193,10 @@ packer build -var-file=packer/variables.json packer/docker.json
 
 ## Домашняя работа №17
 
-Скачал тестовое приложение разбитое на микросервисы.
-В каждом каталоге создал Dockerfile.
-Произвел сборку образов docker на основе dockerfile, и запустил приложение. Данные действия производятся на docker-machine, созданной в YC.
-Команды для сборки
+Скачал тестовое приложение разбитое на микросервисы.  
+В каждом каталоге создал Dockerfile.  
+Произвел сборку образов docker на основе dockerfile, и запустил приложение. Данные действия производятся на docker-machine, созданной в YC.  
+Команды для сборки  
 
 ```
 export YC_FOLDER_ID=<значение>
@@ -214,8 +214,8 @@ docker run -d --network=reddit --network-alias=comment dvparshin/comment:1.0
 docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
 ```
 
-Задание со *
-Задал при сборке свои переменные
+Задание со *  
+Задал при сборке свои переменные  
 ```
 docker run -d --network=reddit --network-alias=new_post_db --network-alias=new_comment_db mongo:latest
 docker run -d --network=reddit --network-alias=post --env POST_DATABASE_HOST=new_post_db dvparshin/post:1.0
@@ -223,7 +223,7 @@ docker run -d --network=reddit --network-alias=comment --env COMMENT_DATABASE_HO
 docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
 ```
 
-Собрал образ для **ui** на базе Alpine. Для **comment** собрал образ на основе ruby:2.4-alpine3.7. Заменил ADD на COPY.
+Собрал образ для **ui** на базе Alpine. Для **comment** собрал образ на основе ruby:2.4-alpine3.7. Заменил ADD на COPY.  
 ```
 REPOSITORY          TAG             IMAGE ID       CREATED        SIZE
 dvparshin/ui        1.0             5b8cf2f1a361   20 hours ago   265MB
