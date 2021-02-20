@@ -167,9 +167,9 @@ docker push <your-login>/otus-reddit:1.0
 docker run --name reddit -d -p 9292:9292 <your-login>/otus-reddit:1.0
 ```
 
-Задание со *  
-**Terraform**  
-Для развертывания приложения использовал Образ Container Optimized Image  
+Задание со *
+**Terraform**
+Для развертывания приложения использовал Образ Container Optimized Image
 Docker-контейнер в Container Optimized Image описывается в спецификации (YAML-файле) spec.yml где указал, что необходимо использовать ранее созданный образ и пробросить порт 9292. Приложение будет доступно http://<Внешний _IP>:9292. Для запуска необходимо перейти в директорию infra/terraform
 ```
 terraform init
@@ -177,7 +177,7 @@ terraform plan
 terraform apply
 ```
 
-**Ansible**  
+**Ansible**
 ВМ развертываются в YC с помощью terraform. На основе данных terraform формируется файл hosts, используется шаблон hosts.tpl. Далее выполняется провиженер и запускаются плайбуки install_docker.yml, run_container.yml. Приложение будет доступно http://<Внешний _IP>:9292. Для запуска необходимо перейти в каталог infra/ansible/terraform
 ```
 terraform init
@@ -185,8 +185,48 @@ terraform plan
 terraform apply
 ```
 
-**Packer**  
+**Packer**
 При сборке образа вначале выполняется провиженер, который запускает bash скрипт на локальной машине (ansible/inventory.sh) скрипт, создающий инвентори файл ansible/hosts. Далее запускается провиженер, который устанавливает docker. Запускать сборку необходимо из директории infra
 ```
 packer build -var-file=packer/variables.json packer/docker.json
+```
+
+## Домашняя работа №17
+
+Скачал тестовое приложение разбитое на микросервисы.  
+В каждом каталоге создал Dockerfile.  
+Произвел сборку образов docker на основе dockerfile, и запустил приложение. Данные действия производятся на docker-machine, созданной в YC.  
+Команды для сборки  
+
+```
+export YC_FOLDER_ID=<значение>
+docker-machine create --driver=yandex --yandex-folder-id=$YC_FOLDER_ID --yandex-cores=2 --yandex-memory=2 --yandex-nat=true --yandex-sa-key-file key.json docker-host
+docker-machine env docker-host
+eval $(docker-machine env docker-host)
+docker pull mongo:latest
+docker build -t dvparshin/post:1.0 ../src/post-py
+docker build -t dvparshin/comment:1.0 ../src/comment
+docker build -t dvparshin/ui:1.0 ../src/ui
+docker network create reddit
+docker run -d --network=reddit --network-alias=post_db --network-alias=comment_db mongo:latest
+docker run -d --network=reddit --network-alias=post dvparshin/post:1.0
+docker run -d --network=reddit --network-alias=comment dvparshin/comment:1.0
+docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
+```
+
+Задание со *  
+Задал при сборке свои переменные  
+```
+docker run -d --network=reddit --network-alias=new_post_db --network-alias=new_comment_db mongo:latest
+docker run -d --network=reddit --network-alias=post --env POST_DATABASE_HOST=new_post_db dvparshin/post:1.0
+docker run -d --network=reddit --network-alias=comment --env COMMENT_DATABASE_HOST=new_comment_db dvparshin/comment:1.0
+docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
+```
+
+Собрал образ для **ui** на базе Alpine. Для **comment** собрал образ на основе ruby:2.4-alpine3.7. Заменил ADD на COPY.  
+```
+REPOSITORY          TAG             IMAGE ID       CREATED        SIZE
+dvparshin/ui        1.0             5b8cf2f1a361   20 hours ago   265MB
+dvparshin/comment   1.0             887ab92aec40   20 hours ago   224MB
+dvparshin/post      1.0             21bed8d42cfe   20 hours ago   110MB
 ```
