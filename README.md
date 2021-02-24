@@ -234,9 +234,9 @@ dvparshin/post      1.0             21bed8d42cfe   20 hours ago   110MB
 
 ### Docker, работа с сетью
 
-ДЗ выполнял по методичке.
-Все работы проводил на docker-machine, созданной в YC.
-Запустил docker контейнеры с различными типами сети (none, host, dridge).
+ДЗ выполнял по методичке.  
+Все работы проводил на docker-machine, созданной в YC.  
+Запустил docker контейнеры с различными типами сети (none, host, dridge).  
 
 ```
 docker run -ti --rm --network none joffotron/docker-net-tools -c ifconfig
@@ -247,8 +247,8 @@ docker-machine ssh docker-host ifconfig
 ```
 docker run --network host -d nginx
 ```
-Запустил данный контейнер 4 раза, первый раз контейнер запустился успешно. Остальные три не запустились, так порт 80 уже занят.
-Так как контейнеры общаются между собой по dns именам, то им необходимо назначить сетевые псевдонимы.
+Запустил данный контейнер 4 раза, первый раз контейнер запустился успешно. Остальные три не запустились, так порт 80 уже занят.  
+Так как контейнеры общаются между собой по dns именам, то им необходимо назначить сетевые псевдонимы.  
 
 ```
 docker kill $(docker ps -q)
@@ -258,12 +258,12 @@ docker run -d --network=reddit --network-alias=comment dvparshin/comment:1.0
 docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
 ```
 
-Далее разбил сети на два сегмента.
+Далее разбил сети на два сегмента.  
 ```
 docker network create back_net --subnet=10.0.2.0/24
 docker network create front_net --subnet=10.0.1.0/24
 ```
-Docker при инициализации контейнера может подключить к нему только 1 сеть. Поэтому подключил контейнеры к другой сети
+Docker при инициализации контейнера может подключить к нему только 1 сеть. Поэтому подключил контейнеры к другой сети  
 ```
 docker network connect front_net post
 docker network connect front_net comment
@@ -271,16 +271,16 @@ docker network connect front_net comment
 
 ### Docker-compose
 
-Установил docker-compose, создал docker-compose.yml
-Добавил в файл конфига сети (back_net, front_net).
-Параметризовал следующие параметры
+Установил docker-compose, создал docker-compose.yml  
+Добавил в файл конфига сети (back_net, front_net).  
+Параметризовал следующие параметры  
  - Порт приложения
  - Порт приложения в контейнере
  - Тэги
  - IP подсетей
 
-Добавил в файл env параметр **COMPOSE_PROJECT_NAME** с помощью которого можно задать имя проекта.
-Создал файл docker-compose.override.yml. Для проверки необходимо выполнить
+Добавил в файл env параметр **COMPOSE_PROJECT_NAME** с помощью которого можно задать имя проекта.  
+Создал файл docker-compose.override.yml. Для проверки необходимо выполнить  
 ```
 docker-compose kill
 docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
