@@ -193,10 +193,10 @@ packer build -var-file=packer/variables.json packer/docker.json
 
 ## Домашняя работа №17
 
-Скачал тестовое приложение разбитое на микросервисы.  
-В каждом каталоге создал Dockerfile.  
-Произвел сборку образов docker на основе dockerfile, и запустил приложение. Данные действия производятся на docker-machine, созданной в YC.  
-Команды для сборки  
+Скачал тестовое приложение разбитое на микросервисы.
+В каждом каталоге создал Dockerfile.
+Произвел сборку образов docker на основе dockerfile, и запустил приложение. Данные действия производятся на docker-machine, созданной в YC.
+Команды для сборки
 
 ```
 export YC_FOLDER_ID=<значение>
@@ -214,8 +214,8 @@ docker run -d --network=reddit --network-alias=comment dvparshin/comment:1.0
 docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
 ```
 
-Задание со *  
-Задал при сборке свои переменные  
+Задание со *
+Задал при сборке свои переменные
 ```
 docker run -d --network=reddit --network-alias=new_post_db --network-alias=new_comment_db mongo:latest
 docker run -d --network=reddit --network-alias=post --env POST_DATABASE_HOST=new_post_db dvparshin/post:1.0
@@ -223,10 +223,74 @@ docker run -d --network=reddit --network-alias=comment --env COMMENT_DATABASE_HO
 docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
 ```
 
-Собрал образ для **ui** на базе Alpine. Для **comment** собрал образ на основе ruby:2.4-alpine3.7. Заменил ADD на COPY.  
+Собрал образ для **ui** на базе Alpine. Для **comment** собрал образ на основе ruby:2.4-alpine3.7. Заменил ADD на COPY.
 ```
 REPOSITORY          TAG             IMAGE ID       CREATED        SIZE
 dvparshin/ui        1.0             5b8cf2f1a361   20 hours ago   265MB
 dvparshin/comment   1.0             887ab92aec40   20 hours ago   224MB
 dvparshin/post      1.0             21bed8d42cfe   20 hours ago   110MB
+```
+## Домашняя работа №18
+
+### Docker, работа с сетью
+
+ДЗ выполнял по методичке.  
+Все работы проводил на docker-machine, созданной в YC.  
+Запустил docker контейнеры с различными типами сети (none, host, dridge).  
+
+```
+docker run -ti --rm --network none joffotron/docker-net-tools -c ifconfig
+docker run -ti --rm --network host joffotron/docker-net-tools -c ifconfig
+docker-machine ssh docker-host ifconfig
+```
+
+```
+docker run --network host -d nginx
+```
+Запустил данный контейнер 4 раза, первый раз контейнер запустился успешно. Остальные три не запустились, так порт 80 уже занят.  
+Так как контейнеры общаются между собой по dns именам, то им необходимо назначить сетевые псевдонимы.  
+
+```
+docker kill $(docker ps -q)
+ocker run -d --network=reddit --network-alias=post_db --network-alias=comment_db mongo:latest
+docker run -d --network=reddit --network-alias=post dvparshin/post: 1.0
+docker run -d --network=reddit --network-alias=comment dvparshin/comment:1.0
+docker run -d --network=reddit -p 9292:9292 dvparshin/ui:1.0
+```
+
+Далее разбил сети на два сегмента.  
+```
+docker network create back_net --subnet=10.0.2.0/24
+docker network create front_net --subnet=10.0.1.0/24
+```
+Docker при инициализации контейнера может подключить к нему только 1 сеть. Поэтому подключил контейнеры к другой сети  
+```
+docker network connect front_net post
+docker network connect front_net comment
+```
+
+### Docker-compose
+
+Установил docker-compose, создал docker-compose.yml  
+Добавил в файл конфига сети (back_net, front_net).  
+Параметризовал следующие параметры  
+ - Порт приложения
+ - Порт приложения в контейнере
+ - Тэги
+ - IP подсетей
+
+Добавил в файл env параметр **COMPOSE_PROJECT_NAME** с помощью которого можно задать имя проекта.  
+Создал файл docker-compose.override.yml. Для проверки необходимо выполнить  
+```
+docker-compose kill
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+```
+
+```
+      Name                   Command             State           Ports
+-------------------------------------------------------------------------------
+reddit_comment_1   puma --debug -w 2             Up
+reddit_post_1      python3 post_app.py           Up
+reddit_post_db_1   docker-entrypoint.sh mongod   Up      27017/tcp
+reddit_ui_1        puma --debug -w 2             Up      0.0.0.0:9292->9292/tcp
 ```

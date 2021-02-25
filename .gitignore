@@ -20,3 +20,6 @@ vault.key
 .pytest_cache
 venv/
 __pycache__/
+## python specific
+*.pyc
+.env
