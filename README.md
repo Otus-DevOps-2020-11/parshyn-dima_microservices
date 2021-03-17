@@ -369,24 +369,21 @@ git commit -m "Add reddit app"
 git push gitlab gitlab-ci-1
 ```
 
-Задание со *
+### Задание со *
 Столкнулся с проблемой, что dind (docker in docker) завершался ошибкой, исправил заменой в config.toml privileged = false на privileged = true
 ```
 sudo vi /srv/gitlab-runner/config/config.toml
 ```
-DinD - Cannot connect to the Docker daemon. Is the docker daemon running on this host?
 Для сборки приложения использовал ВМ на основе Container Optimized Image, там предустановлен docker и docker-compose. На данной ВМ установил и зарегистрировал два gitlab runner (docker и shell). Первый собирает docker образ, с помощью второго происходит деплой приложения из созданного образа.
 
 Настроил работу GitLab на работу со своим репозиторием образов. То есть при коммите создаётся докер образ, которому присваивается тэг сокращенного хэша коммита и тэг latest. Также пробовал работу с docker hub, для этого в настройках ci/cd проекта - Variables добавил переменные (DOCKER_REGISTRY_PASS, DOCKER_REGISTRY_USER). Для сборки образа использовал Dockerfile и docker runner.
 
 Для сборки приложения использовал docker-compose файл и shell runner.
-Как при развертывании приложения назначать нужную dns запись я не понял.
+Как при развертывании приложения назначать ВМ нужную dns запись я не понял.
 
-Автоматизация развёртывания GitLab Runner
+### Автоматизация развёртывания GitLab Runner
 
- lean-delivery /ansible-role-gitlab-runner
-Personal access tokens
-Найденная роль отрабатывает однако зарегистрированный runner в gitlab отображается с восклицательным знаком. Для работы роли создал Access Tokens (Иконка профиля - edite profile - access tokens). В файле terraform/main.tf в строке запуска плайбука необходимо удказать токены gitlab
+Найденная роль отрабатывает, однако зарегистрированный runner в gitlab отображается с восклицательным знаком. Для работы роли создал Access Tokens (Иконка профиля - edite profile - access tokens). В файле terraform/main.tf в строке запуска плайбука необходимо удказать токены gitlab
 ```
 ansible-playbook ../ansible/provision.yml -e "GITLAB_API_TOKEN= GITLAB_REGISTRATION_TOKEN="
 ```
@@ -394,5 +391,5 @@ ansible-playbook ../ansible/provision.yml -e "GITLAB_API_TOKEN= GITLAB_REGISTRAT
 
 Настройка оповещений в Slack
 
-Slack Notifications Service
+### Slack Notifications Service
 Оповещения в slack настроил по мануалу с официальной странице gitlab
