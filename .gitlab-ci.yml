@@ -1,0 +1,96 @@
+stages:
+  - build
+  - test
+  - review
+  - stage
+  - production
+
+build_job:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    #DOCKER_HOST: tcp://docker:2375
+    IMAGE_NAME: ${CI_REGISTRY}/homework/example
+  #before_script:
+    #- echo "$DOCKER_REGISTRY_PASS" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password-stdin
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - docker build -t ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} ./reddit
+    - docker push ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}
+    - docker tag ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} ${IMAGE_NAME}:latest
+    - docker push ${IMAGE_NAME}:latest
+    - if [[ ! -z "${CI_COMMIT_TAG}" ]]; then docker tag ${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA} ${IMAGE_NAME}:${CI_COMMIT_TAG}; fi
+    - if [[ ! -z "${CI_COMMIT_TAG}" ]]; then docker push {IMAGE_NAME}:${CI_COMMIT_TAG}; fi
+    # - docker image build -t dvparshin/otus-reddit:2.0 ./reddit
+    # - docker push dvparshin/otus-reddit:2.0
+  tags:
+    - docker
+
+test_unit_job:
+  stage: test
+  image: ruby:2.4.2
+  services:
+    - mongo:latest
+  variables:
+    DATABASE_URL: 'mongodb://mongo/user_posts'
+  before_script:
+    - cd reddit
+    - bundle install
+  script:
+    - ruby simpletest.rb
+
+# На gitlab-runner запускается docker в котором выполняется echo 'Testing 2'
+test_integration_job:
+  stage: test
+  script:
+    - echo 'Testing 2'
+
+deploy_dev_job:
+  stage: review
+  script:
+    - echo 'Deploy'
+  environment:
+    name: dev
+    url: http://dev.dparshin.ru
+
+staging:
+  stage: stage
+  when: manual
+  only:
+    - /^\d+\.\d+\.\d+/
+  script:
+    - echo 'Deploy'
+  environment:
+    name: stage
+    url: http://beta.dparshin.ru
+
+# На gitlab-runner запускается docker в котором выполняется echo 'Deploy'
+production:
+  stage: production
+  when: manual
+  script:
+    - echo 'Deploy'
+  environment:
+    name: production
+    url: http://dparshin.ru
+
+branch review:
+  stage: review
+  script:
+    - echo "Deploy to ${CI_ENVIRONMENT_SLUG}"
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - cd ./reddit
+    - docker-compose up -d
+  environment:
+    name: branch/${CI_COMMIT_REF_NAME}
+    url: http://${CI_ENVIRONMENT_SLUG}.dparshin.ru
+  only:
+    - branches
+  except:
+    - master
+  tags:
+    - app-shell
