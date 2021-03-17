@@ -298,7 +298,7 @@ reddit_ui_1        puma --debug -w 2             Up      0.0.0.0:9292->9292/tcp
 ## Домашняя работа №20
 
 Для создания ВМ GitLab написал terraform файл и взял готовую роль ansible   geerlingguy /ansible-role-gitlab . Столкнулся с проблемой, что если указать в terraform зарезервированный внешний IP, то создание ВМ заканчивается ошибкой и сообщением, что это баг и необходимо обратиться в поддержку )
-Поэтому развернул ВМ руками и с помощью роли ansible установил GitLab, выбрал этот вариант, так как есть свой домен и хотелось сразу при установке GitLab сформировать letsencrypt сертификат. Если сертификат не важен, то можно использовать terraform+ansible, внеся изменения в gitlab/ansible/roles/gitlab/defaults/main.yml. На выходе будет ВМ с самоподписанным сертификатом.
+Поэтому развернул ВМ руками и с помощью роли ansible установил GitLab, выбрал этот вариант, так как есть свой домен и хотелось сразу при установке GitLab сформировать letsencrypt сертификат. Если сертификат не важен, то можно использовать terraform+ansible, внеся изменения в gitlab/ansible/roles/gitlab/defaults/main.yml. На выходе будет ВМ с самоподписанным сертификатом.  
 ```
 gitlab_redirect_http_to_https: "false"
 ```
@@ -306,24 +306,24 @@ gitlab_redirect_http_to_https: "false"
 ```
 gitlab_create_self_signed_cert: "true"
 ```
-Также в gitlab/ansible/ansible.cfg необходимо
+Также в gitlab/ansible/ansible.cfg необходимо  
 ```
 inventory = inventory.yml
 заменить на
 inventory = hosts
 ```
-Файл hosts создаётся из шаблона в terraform.
-Можно конечно было создать bash с командами YC CLI, который будет создавать ВМ c зарезервированным IP и запускать ansible роль.
+Файл hosts создаётся из шаблона в terraform.  
+Можно конечно было создать bash с командами YC CLI, который будет создавать ВМ c зарезервированным IP и запускать ansible роль.  
 
-Сервер доступен по адресу https://gitlab.dparshin.ru/
-Создал группу homework и проект example.
-Добавил удаленный репозиторий на gitlab
+Сервер доступен по адресу https://gitlab.dparshin.ru/  
+Создал группу homework и проект example.  
+Добавил удаленный репозиторий на gitlab  
 ```
 git remote add gitlab git@gitlab.dparshin.ru:homework/example.git
 git push gitlab gitlab-ci-1
 ```
 
-Создал ВМ в YC, в качестве образа выбрал Container Optimized Image 2.0.3, зашел по ssh
+Создал ВМ в YC, в качестве образа выбрал Container Optimized Image 2.0.3, зашел по ssh  
 ```
 docker run -d --name gitlab-runner --restart always -v /srv/gitlab-runner/config:/etc/gitlab-runner -v /var/run/docker.sock:/var/run/docker.sock gitlab/gitlab-runner:latest
 ```
@@ -341,7 +341,7 @@ docker exec -it gitlab-runner gitlab-runner register \
 --run-untagged
 ```
 
-Shell runner
+Shell runner  
 ```
 sudo curl -L --output /usr/local/bin/gitlab-runner "https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64"
 sudo chmod +x /usr/local/bin/gitlab-runner
@@ -361,7 +361,7 @@ gitlab-runner register \
 --tag-list "app-shell" \
 --run-untagged
 ```
-Добавил проект
+Добавил проект  
 ```
 git clone https://github.com/express42/reddit.git && rm -rf ./reddit/.git
 git add reddit/
@@ -369,27 +369,31 @@ git commit -m "Add reddit app"
 git push gitlab gitlab-ci-1
 ```
 
-### Задание со *
-Столкнулся с проблемой, что dind (docker in docker) завершался ошибкой, исправил заменой в config.toml privileged = false на privileged = true
+### Задание со *  
+### Запуск reddit в контейнере  
+
+Столкнулся с проблемой, что dind (docker in docker) завершался ошибкой, исправил заменой в config.toml privileged = false на privileged = true  
 ```
 sudo vi /srv/gitlab-runner/config/config.toml
 ```
-Для сборки приложения использовал ВМ на основе Container Optimized Image, там предустановлен docker и docker-compose. На данной ВМ установил и зарегистрировал два gitlab runner (docker и shell). Первый собирает docker образ, с помощью второго происходит деплой приложения из созданного образа.
+Для сборки приложения использовал ВМ на основе Container Optimized Image, там предустановлен docker и docker-compose. На данной ВМ установил и зарегистрировал два gitlab runner (docker и shell). Первый собирает docker образ, с помощью второго происходит деплой приложения из созданного образа.  
 
-Настроил работу GitLab на работу со своим репозиторием образов. То есть при коммите создаётся докер образ, которому присваивается тэг сокращенного хэша коммита и тэг latest. Также пробовал работу с docker hub, для этого в настройках ci/cd проекта - Variables добавил переменные (DOCKER_REGISTRY_PASS, DOCKER_REGISTRY_USER). Для сборки образа использовал Dockerfile и docker runner.
+Настроил работу GitLab на работу со своим репозиторием образов. То есть при коммите создаётся докер образ, которому присваивается тэг сокращенного хэша коммита и тэг latest. Также пробовал работу с docker hub, для этого в настройках ci/cd проекта - Variables добавил переменные (DOCKER_REGISTRY_PASS, DOCKER_REGISTRY_USER). Для сборки образа использовал Dockerfile и docker runner.  
 
-Для сборки приложения использовал docker-compose файл и shell runner.
-Как при развертывании приложения назначать ВМ нужную dns запись я не понял.
+Для сборки приложения использовал docker-compose файл и shell runner.  
+Как при развертывании приложения назначать ВМ нужную dns запись я не понял.  
 
-### Автоматизация развёртывания GitLab Runner
+### Автоматизация развёртывания GitLab Runner  
 
-Найденная роль отрабатывает, однако зарегистрированный runner в gitlab отображается с восклицательным знаком. Для работы роли создал Access Tokens (Иконка профиля - edite profile - access tokens). В файле terraform/main.tf в строке запуска плайбука необходимо удказать токены gitlab
+Найденная роль отрабатывает, однако зарегистрированный runner в gitlab отображается с восклицательным знаком. Для работы роли создал Access Tokens (Иконка профиля - edite profile - access tokens). В файле terraform/main.tf в строке запуска плайбука необходимо удказать токены gitlab  
 ```
 ansible-playbook ../ansible/provision.yml -e "GITLAB_API_TOKEN= GITLAB_REGISTRATION_TOKEN="
 ```
-Проще всего наверное настроить установку и регистрацию раннеров через bash скрипт
+Проще всего наверное настроить установку и регистрацию раннеров через bash скрипт  
 
-Настройка оповещений в Slack
+Настройка оповещений в Slack  
 
-### Slack Notifications Service
-Оповещения в slack настроил по мануалу с официальной странице gitlab
+### Slack Notifications Service  
+Оповещения в slack настроил по мануалу с официальной странице gitlab  
+
+![Screen](https://raw.githubusercontent.com/parshyn-dima/Screenshot/main/Screenshot%20from%202021-03-17%2012-09-55.png)
