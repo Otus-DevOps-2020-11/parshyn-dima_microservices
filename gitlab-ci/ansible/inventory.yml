@@ -1,0 +1,7 @@
+---
+all:
+  children:
+    ci:
+      hosts:
+        runner:
+          ansible_host: 130.193.40.23

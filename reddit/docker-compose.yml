@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+  mongo:
+    image: mongo:latest
+    volumes:
+      - mongo:/data/db
+
+  reddit:
+    image: gitlab.dparshin.ru:4567/homework/example:latest
+    environment:
+      - DATABASE_URL=mongo
+    ports:
+      - 9292:9292
+
+volumes:
+  mongo:

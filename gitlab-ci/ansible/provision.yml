@@ -1,0 +1,24 @@
+---
+- name: Install GitLab Server
+  hosts: gitlab
+  become: true
+  vars_files:
+    - vars/main.yml
+  roles:
+    - gitlab
+- name: Install GitLab Runner
+  hosts: runner
+  become: true
+  roles:
+    - gitlab-runner
+  vars:
+    gitlab_runner_concurrent: 4
+    gitlab_runner_skip_registration: false
+    gitlab_api_token: "{{ GITLAB_API_TOKEN }}"
+    gitlab_ci_token: "{{ GITLAB_REGISTRATION_TOKEN }}"
+    gitlab_runner_description: 'My Great Runner'
+    gitlab_runner_tags:
+      - deploy_test
+      - shell
+    gitlab_runner_untagged_builds_run: false
+    gitlab_version: 'latest'
