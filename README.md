@@ -400,42 +400,42 @@ ansible-playbook ../ansible/provision.yml -e "GITLAB_API_TOKEN= GITLAB_REGISTRAT
 
 ## Домашняя работа №22
 
-Создал ВМ с помощью docker-machine.
+Создал ВМ с помощью docker-machine  
 ```
 docker-machine create --driver=yandex --yandex-folder-id=$YC_FOLDER_ID --yandex-image-id=fd87uq4tagjupcnm376a --yandex-cores=2 --yandex-memory=2 --yandex-nat=true --yandex-sa-key-file key.json docker-host
 docker-machine env docker-host
 eval $(docker-machine env docker-host)
 ```
-Запускаем контейнер с prometheus
+Запускаем контейнер с prometheus  
 ```
 docker run --rm -p 9090:9090 -d --name prometheus prom/prometheus
 ```
-Остановил контейнер
+Остановил контейнер  
 ```
 docker stop prometheus
 ```
-Создал dockerfile, который создаёт контейнер prometheus и передает в него файл конфигурации Prometheus.yml
-В данном добавлены таргеты микросервисов нашего приложения (ui, comment)
-Столкнулся с проблемой, ранее в файле env переменная определяющая имя пользователя называлась USERNAME, в результате сборка образов заканчивалась ошибкой. Изменил на USER_NAME.
-Перешел в каталог monitoring/prometheus. Собрал образ.
+Создал dockerfile, который создаёт контейнер prometheus и передает в него файл конфигурации Prometheus.yml  
+В данном добавлены таргеты микросервисов нашего приложения (ui, comment)  
+Столкнулся с проблемой, ранее в файле env переменная определяющая имя пользователя называлась USERNAME, в результате сборка образов заканчивалась ошибкой. Изменил на USER_NAME.  
+Перешел в каталог monitoring/prometheus. Собрал образ.  
 ```
 export USER_NAME=dvparshin
 docker build -t $USER_NAME/prometheus .
 ```
-Из корня проекта собрал остальные образы
+Из корня проекта собрал остальные образы  
 ```
 for i in ui post-py comment; do cd src/$i; bash docker_build.sh; cd -; done
 ```
-Переходим в docker/docker-monolith
+Переходим в docker/docker-monolith  
 ```
 docker-compose up -d
 ```
-Добавил конфиг контейнера prometheus  в docker-compose.yml
+Добавил конфиг контейнера prometheus  в docker-compose.yml  
 ```
 docker-compose up -d
 ```
-Для мониторинга ОС и БД используют Node exporter, приложение которое собирает метрики в нужном формате для prometheus.
-Добавил описание контейнера в docker-compose.yml. Чтобы указать prometheus за какими сервисами следить, инфу нужно добавить в prometheus.yml. После этого нужно пересобрать образ prometheus и перезапустить compose
+Для мониторинга ОС и БД используют Node exporter, приложение которое собирает метрики в нужном формате для prometheus.  
+Добавил описание контейнера в docker-compose.yml. Чтобы указать prometheus за какими сервисами следить, инфу нужно добавить в prometheus.yml. После этого нужно пересобрать образ prometheus и перезапустить compose  
 ```
 docker build -t $USER_NAME/prometheus .
 ```
@@ -445,20 +445,20 @@ docker-compose down
 docker-compose up -d
 ```
 Проверить, что node exporter добавился можно http://<IP>:9090/targets
-### Задание со *
+### Задание со *  
 
-**мониторинг MongoDB**
+**мониторинг MongoDB**  
 
-Для мониторинга mongo использовал percona/mongodb-exporter. Для создания своего dockerfile использовал вот этот bitnami-docker-mongodb-exporter.
-Dockerfile разместил monitoring/mongodb_exporter, собрал образ и запушил его, добавил конфиг в
-prometheus.yml (После этого пришлось пересобрать образ prometheus)
-```
+Для мониторинга mongo использовал percona/mongodb-exporter. Для создания своего dockerfile использовал вот этот bitnami-docker-mongodb-exporter.  
+Dockerfile разместил monitoring/mongodb_exporter, собрал образ и запушил его, добавил конфиг в  
+prometheus.yml (После этого пришлось пересобрать образ prometheus)  
+``` 
 - job_name: 'mongo'
     static_configs:
       - targets:
         - 'mongo-exporter:9216'
 ```
-docker-compose.yml
+docker-compose.yml  
 ```
 mongo-exporter:
     image: ${USER_NAME}/mongodb-exporter:latest
@@ -473,10 +473,10 @@ mongo-exporter:
       - post_db
 ```
 
-**Добавить в Prometheus мониторинг сервисов comment, post, ui с помощью blackbox экспортера**
+**Добавить в Prometheus мониторинг сервисов comment, post, ui с помощью blackbox экспортера**  
 
-Аналогично mongo-exporter использовал prometheus/blackbox_exporter. Для создания своего dockerfile использовал вот этот bitnami-docker-blackbox-exporter. Dockerfile разместил в monitoring/blackbox_exporter, собрал образ и запушил его, добавил конфиг в
-prometheus.yml (После этого пришлось пересобрать образ prometheus)
+Аналогично mongo-exporter использовал prometheus/blackbox_exporter. Для создания своего dockerfile использовал вот этот bitnami-docker-blackbox-exporter.   Dockerfile разместил в monitoring/blackbox_exporter, собрал образ и запушил его, добавил конфиг в  
+prometheus.yml (После этого пришлось пересобрать образ prometheus)  
 ```
 - job_name: 'blackbox_http'
     metrics_path: /probe
@@ -495,7 +495,7 @@ prometheus.yml (После этого пришлось пересобрать о
       - target_label: __address__
         replacement: 'blackbox-exporter:9115'
 ```
-docker-compose.yml
+docker-compose.yml  
 ```
 blackbox-exporter:
     image: ${USER_NAME}/blackbox-exporter:latest
