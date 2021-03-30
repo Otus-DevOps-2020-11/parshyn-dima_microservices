@@ -298,7 +298,7 @@ reddit_ui_1        puma --debug -w 2             Up      0.0.0.0:9292->9292/tcp
 ## Домашняя работа №20
 
 Для создания ВМ GitLab написал terraform файл и взял готовую роль ansible   geerlingguy /ansible-role-gitlab . Столкнулся с проблемой, что если указать в terraform зарезервированный внешний IP, то создание ВМ заканчивается ошибкой и сообщением, что это баг и необходимо обратиться в поддержку )
-Поэтому развернул ВМ руками и с помощью роли ansible установил GitLab, выбрал этот вариант, так как есть свой домен и хотелось сразу при установке GitLab сформировать letsencrypt сертификат. Если сертификат не важен, то можно использовать terraform+ansible, внеся изменения в gitlab/ansible/roles/gitlab/defaults/main.yml. На выходе будет ВМ с самоподписанным сертификатом.  
+Поэтому развернул ВМ руками и с помощью роли ansible установил GitLab, выбрал этот вариант, так как есть свой домен и хотелось сразу при установке GitLab сформировать letsencrypt сертификат. Если сертификат не важен, то можно использовать terraform+ansible, внеся изменения в gitlab/ansible/roles/gitlab/defaults/main.yml. На выходе будет ВМ с самоподписанным сертификатом.
 ```
 gitlab_redirect_http_to_https: "false"
 ```
@@ -306,24 +306,24 @@ gitlab_redirect_http_to_https: "false"
 ```
 gitlab_create_self_signed_cert: "true"
 ```
-Также в gitlab/ansible/ansible.cfg необходимо  
+Также в gitlab/ansible/ansible.cfg необходимо
 ```
 inventory = inventory.yml
 заменить на
 inventory = hosts
 ```
-Файл hosts создаётся из шаблона в terraform.  
-Можно конечно было создать bash с командами YC CLI, который будет создавать ВМ c зарезервированным IP и запускать ansible роль.  
+Файл hosts создаётся из шаблона в terraform.
+Можно конечно было создать bash с командами YC CLI, который будет создавать ВМ c зарезервированным IP и запускать ansible роль.
 
-Сервер доступен по адресу https://gitlab.dparshin.ru/  
-Создал группу homework и проект example.  
-Добавил удаленный репозиторий на gitlab  
+Сервер доступен по адресу https://gitlab.dparshin.ru/
+Создал группу homework и проект example.
+Добавил удаленный репозиторий на gitlab
 ```
 git remote add gitlab git@gitlab.dparshin.ru:homework/example.git
 git push gitlab gitlab-ci-1
 ```
 
-Создал ВМ в YC, в качестве образа выбрал Container Optimized Image 2.0.3, зашел по ssh  
+Создал ВМ в YC, в качестве образа выбрал Container Optimized Image 2.0.3, зашел по ssh
 ```
 docker run -d --name gitlab-runner --restart always -v /srv/gitlab-runner/config:/etc/gitlab-runner -v /var/run/docker.sock:/var/run/docker.sock gitlab/gitlab-runner:latest
 ```
@@ -341,7 +341,7 @@ docker exec -it gitlab-runner gitlab-runner register \
 --run-untagged
 ```
 
-Shell runner  
+Shell runner
 ```
 sudo curl -L --output /usr/local/bin/gitlab-runner "https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64"
 sudo chmod +x /usr/local/bin/gitlab-runner
@@ -361,7 +361,7 @@ gitlab-runner register \
 --tag-list "app-shell" \
 --run-untagged
 ```
-Добавил проект  
+Добавил проект
 ```
 git clone https://github.com/express42/reddit.git && rm -rf ./reddit/.git
 git add reddit/
@@ -369,31 +369,140 @@ git commit -m "Add reddit app"
 git push gitlab gitlab-ci-1
 ```
 
-### Задание со *  
-### Запуск reddit в контейнере  
+### Задание со *
+### Запуск reddit в контейнере
 
-Столкнулся с проблемой, что dind (docker in docker) завершался ошибкой, исправил заменой в config.toml privileged = false на privileged = true  
+Столкнулся с проблемой, что dind (docker in docker) завершался ошибкой, исправил заменой в config.toml privileged = false на privileged = true
 ```
 sudo vi /srv/gitlab-runner/config/config.toml
 ```
-Для сборки приложения использовал ВМ на основе Container Optimized Image, там предустановлен docker и docker-compose. На данной ВМ установил и зарегистрировал два gitlab runner (docker и shell). Первый собирает docker образ, с помощью второго происходит деплой приложения из созданного образа.  
+Для сборки приложения использовал ВМ на основе Container Optimized Image, там предустановлен docker и docker-compose. На данной ВМ установил и зарегистрировал два gitlab runner (docker и shell). Первый собирает docker образ, с помощью второго происходит деплой приложения из созданного образа.
 
-Настроил работу GitLab на работу со своим репозиторием образов. То есть при коммите создаётся докер образ, которому присваивается тэг сокращенного хэша коммита и тэг latest. Также пробовал работу с docker hub, для этого в настройках ci/cd проекта - Variables добавил переменные (DOCKER_REGISTRY_PASS, DOCKER_REGISTRY_USER). Для сборки образа использовал Dockerfile и docker runner.  
+Настроил работу GitLab на работу со своим репозиторием образов. То есть при коммите создаётся докер образ, которому присваивается тэг сокращенного хэша коммита и тэг latest. Также пробовал работу с docker hub, для этого в настройках ci/cd проекта - Variables добавил переменные (DOCKER_REGISTRY_PASS, DOCKER_REGISTRY_USER). Для сборки образа использовал Dockerfile и docker runner.
 
-Для сборки приложения использовал docker-compose файл и shell runner.  
-Как при развертывании приложения назначать ВМ нужную dns запись я не понял.  
+Для сборки приложения использовал docker-compose файл и shell runner.
+Как при развертывании приложения назначать ВМ нужную dns запись я не понял.
 
-### Автоматизация развёртывания GitLab Runner  
+### Автоматизация развёртывания GitLab Runner
 
-Найденная роль отрабатывает, однако зарегистрированный runner в gitlab отображается с восклицательным знаком. Для работы роли создал Access Tokens (Иконка профиля - edite profile - access tokens). В файле terraform/main.tf в строке запуска плайбука необходимо удказать токены gitlab  
+Найденная роль отрабатывает, однако зарегистрированный runner в gitlab отображается с восклицательным знаком. Для работы роли создал Access Tokens (Иконка профиля - edite profile - access tokens). В файле terraform/main.tf в строке запуска плайбука необходимо удказать токены gitlab
 ```
 ansible-playbook ../ansible/provision.yml -e "GITLAB_API_TOKEN= GITLAB_REGISTRATION_TOKEN="
 ```
-Проще всего наверное настроить установку и регистрацию раннеров через bash скрипт  
+Проще всего наверное настроить установку и регистрацию раннеров через bash скрипт
 
-Настройка оповещений в Slack  
+Настройка оповещений в Slack
 
-### Slack Notifications Service  
-Оповещения в slack настроил по мануалу с официальной странице gitlab  
+### Slack Notifications Service
+Оповещения в slack настроил по мануалу с официальной странице gitlab
 
 ![Screen](https://raw.githubusercontent.com/parshyn-dima/Screenshot/main/Screenshot%20from%202021-03-17%2012-09-55.png)
+
+## Домашняя работа №22
+
+Создал ВМ с помощью docker-machine  
+```
+docker-machine create --driver=yandex --yandex-folder-id=$YC_FOLDER_ID --yandex-image-id=fd87uq4tagjupcnm376a --yandex-cores=2 --yandex-memory=2 --yandex-nat=true --yandex-sa-key-file key.json docker-host
+docker-machine env docker-host
+eval $(docker-machine env docker-host)
+```
+Запускаем контейнер с prometheus  
+```
+docker run --rm -p 9090:9090 -d --name prometheus prom/prometheus
+```
+Остановил контейнер  
+```
+docker stop prometheus
+```
+Создал dockerfile, который создаёт контейнер prometheus и передает в него файл конфигурации Prometheus.yml  
+В данном добавлены таргеты микросервисов нашего приложения (ui, comment)  
+Столкнулся с проблемой, ранее в файле env переменная определяющая имя пользователя называлась USERNAME, в результате сборка образов заканчивалась ошибкой. Изменил на USER_NAME.  
+Перешел в каталог monitoring/prometheus. Собрал образ.  
+```
+export USER_NAME=dvparshin
+docker build -t $USER_NAME/prometheus .
+```
+Из корня проекта собрал остальные образы  
+```
+for i in ui post-py comment; do cd src/$i; bash docker_build.sh; cd -; done
+```
+Переходим в docker/docker-monolith  
+```
+docker-compose up -d
+```
+Добавил конфиг контейнера prometheus  в docker-compose.yml  
+```
+docker-compose up -d
+```
+Для мониторинга ОС и БД используют Node exporter, приложение которое собирает метрики в нужном формате для prometheus.  
+Добавил описание контейнера в docker-compose.yml. Чтобы указать prometheus за какими сервисами следить, инфу нужно добавить в prometheus.yml. После этого нужно пересобрать образ prometheus и перезапустить compose  
+```
+docker build -t $USER_NAME/prometheus .
+```
+
+```
+docker-compose down
+docker-compose up -d
+```
+Проверить, что node exporter добавился можно http://<IP>:9090/targets
+### Задание со *  
+
+**мониторинг MongoDB**  
+
+Для мониторинга mongo использовал percona/mongodb-exporter. Для создания своего dockerfile использовал вот этот bitnami-docker-mongodb-exporter.  
+Dockerfile разместил monitoring/mongodb_exporter, собрал образ и запушил его, добавил конфиг в  
+prometheus.yml (После этого пришлось пересобрать образ prometheus)  
+``` 
+- job_name: 'mongo'
+    static_configs:
+      - targets:
+        - 'mongo-exporter:9216'
+```
+docker-compose.yml  
+```
+mongo-exporter:
+    image: ${USER_NAME}/mongodb-exporter:latest
+    environment:
+      - MONGODB_URI=mongodb://post_db:27017
+    networks:
+      - front_net
+      - back_net
+    ports:
+      - 9216:9216
+    depends_on:
+      - post_db
+```
+
+**Добавить в Prometheus мониторинг сервисов comment, post, ui с помощью blackbox экспортера**  
+
+Аналогично mongo-exporter использовал prometheus/blackbox_exporter. Для создания своего dockerfile использовал вот этот bitnami-docker-blackbox-exporter.   Dockerfile разместил в monitoring/blackbox_exporter, собрал образ и запушил его, добавил конфиг в  
+prometheus.yml (После этого пришлось пересобрать образ prometheus)  
+```
+- job_name: 'blackbox_http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - comment:9292/healthcheck
+        - post:5000/healthcheck
+        - ui:9292/healthcheck
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'blackbox-exporter:9115'
+```
+docker-compose.yml  
+```
+blackbox-exporter:
+    image: ${USER_NAME}/blackbox-exporter:latest
+    networks:
+      - front_net
+      - back_net
+    user: root
+    ports:
+      - 9115:9115
+```
