@@ -516,7 +516,7 @@ docker-machine create --driver=yandex --yandex-folder-id=$YC_FOLDER_ID --yandex-
 docker-machine env docker-host
 eval $(docker-machine env docker-host)
 ```
-Разлелил docker-compose.yml, все что касается мониторинга вынес docker-compose-monitoring.yml.  
+Разлелил docker-compose.yml, все что касается мониторинга вынес в docker-compose-monitoring.yml.  
 Добавил в проект cAdvisor.  
 Добавил в проект Grafana. Добавил дашборды по инструкции.  
 Добавил в проект alertmanager, настроил отправку оповещений в slack.  
@@ -548,3 +548,4 @@ sudo systemctl restart docker
 
 3. Добавил telegraf, метрик собирается мало. Я так и не нашел дашборда для docker.  
 4. В конфиг alermanager добавил отправку на email, через почту gmail. Главное в настройках профиля google - безопасность - Небезопасные приложения разрешены (включить)  
+Ссылка на DockerHub https://hub.docker.com/u/dvparshin
