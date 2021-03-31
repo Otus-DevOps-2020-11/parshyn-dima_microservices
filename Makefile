@@ -1,4 +1,4 @@
-include ${PWD}/docker/docker-monolith/.env
+include ${PWD}/docker/.env
 DOCKER_IMAGES = $(shell docker images -q)
 DOCKER_CONTAINERS=$(shell docker ps -a -q)
 
@@ -9,7 +9,7 @@ help:
 #===================================================== DOCKER BUILD =====================================================================
 
 
-build-all: build-prometheus build-ui build-comment build-post build-mongodb-exporter build-blackbox-exporter ## Создать все docker образы проекта
+build-all: build-prometheus build-ui build-comment build-post build-mongodb-exporter build-blackbox-exporter build-alertmanager build-telegraf ## Создать все docker образы проекта
 
 build-prometheus: ## Создание docker-образа для контейнера prometheus
 	cd monitoring/prometheus && \
@@ -29,6 +29,12 @@ build-mongodb-exporter: ## Создание docker-образа для конт�
 build-blackbox-exporter: ## Создание docker-образа для контейнера blackbox-exporter
 	cd monitoring/blackbox_exporter && \
 	docker image build -t $(USER_NAME)/blackbox-exporter:$(BLKBOXEXP_TAG) .
+build-alertmanager: ## Создание docker-образа для контейнера alertmanager
+	cd monitoring/alertmanager && \
+	docker image build -t $(USER_NAME)/alertmanager:$(ALERTMANAGER_TAG) .
+build-telegraf: ## Создание docker-образа для контейнера telegraf
+	cd monitoring/telegraf && \
+	docker image build -t $(USER_NAME)/telegraf:$(TELEGRAF_TAG) .
 
 #===================================================== DELETE =====================================================================
 
@@ -44,7 +50,7 @@ delete-image-all: ## Удалить все docker образы
 docker-login:
 	docker login -u $(USER_NAME)
 
-push-all: push-prometheus push-ui push-comment push-post push-mongodb-exporter push-blackbox-exporter
+push-all: push-prometheus push-ui push-comment push-post push-mongodb-exporter push-blackbox-exporter push-alertmanager push-telegraf
 
 push-prometheus: ## Сохранение docker-образа prometheus в DockerHub (образ должен быть уже собран)
 	docker push $(USER_NAME)/prometheus:$(PROMETHEUS_TAG)
@@ -58,14 +64,25 @@ push-mongodb-exporter: ## Сохранение docker-образа mongodb-expor
 	docker push $(USER_NAME)/mongodb-exporter:$(MONGOEXP_TAG)
 push-blackbox-exporter: ## Сохранение docker-образа blackbox-exporter в DockerHub (образ должен быть уже собран)
 	docker push $(USER_NAME)/blackbox-exporter:$(BLKBOXEXP_TAG)
-
+push-alertmanager: ## Сохранение docker-образа alertmanager в DockerHub (образ должен быть уже собран)
+	docker push $(USER_NAME)/alertmanager:$(ALERTMANAGER_TAG)
+push-telegraf: ## Сохранение docker-образа telegraf в DockerHub (образ должен быть уже собран)
+	docker push $(USER_NAME)/telegraf:$(TELEGRAF_TAG)
 
 #===================================================== DOCKER-COMPOSE =====================================================================
 
-docker-compose-up: ## Запуск контейнеров с помощью docker-compose
-	cd docker/docker-monolith && \
-	docker-compose up -d
+docker-compose-up: ## Запуск application контейнеров с помощью docker-compose (docker-compose.yml)
+	cd docker && \
+	docker-compose -f docker-compose.yml up -d
 
-docker-compose-down: ## Остановка контейнеров с помощью docker-compose
-	cd docker/docker-monolith && \
-	docker-compose down
+docker-compose-up-monitoring: ## Запуск monitoring контейнеров с помощью docker-compose (docker-compose-monitoring.yml)
+	cd docker && \
+	docker-compose -p monitoring -f docker-compose-monitoring.yml up -d
+
+docker-compose-down: ## Остановка application контейнеров с помощью docker-compose (docker-compose.yml)
+	cd docker && \
+	docker-compose -f docker-compose.yml down
+
+docker-compose-down-monitoring: ## Остановка monitoring контейнеров с помощью docker-compose (docker-compose-monitoring.yml)
+	cd docker && \
+	docker-compose -p monitoring -f docker-compose-monitoring.yml down
