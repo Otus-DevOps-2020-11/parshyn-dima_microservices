@@ -9,7 +9,7 @@ help:
 #===================================================== DOCKER BUILD =====================================================================
 
 
-build-all: build-prometheus build-ui build-comment build-post build-mongodb-exporter build-blackbox-exporter build-alertmanager build-telegraf ## Создать все docker образы проекта
+build-all: build-prometheus build-ui build-comment build-post build-mongodb-exporter build-blackbox-exporter build-alertmanager build-telegraf build-fluentd ## Создать все docker образы проекта
 
 build-prometheus: ## Создание docker-образа для контейнера prometheus
 	cd monitoring/prometheus && \
@@ -35,6 +35,9 @@ build-alertmanager: ## Создание docker-образа для контей�
 build-telegraf: ## Создание docker-образа для контейнера telegraf
 	cd monitoring/telegraf && \
 	docker image build -t $(USER_NAME)/telegraf:$(TELEGRAF_TAG) .
+build-fluentd: ## Создание docker-образа для контейнера telegraf
+	cd logging/fluentd && \
+	docker image build -t $(USER_NAME)/fluentd .
 
 #===================================================== DELETE =====================================================================
 
@@ -50,7 +53,7 @@ delete-image-all: ## Удалить все docker образы
 docker-login:
 	docker login -u $(USER_NAME)
 
-push-all: push-prometheus push-ui push-comment push-post push-mongodb-exporter push-blackbox-exporter push-alertmanager push-telegraf
+push-all: push-prometheus push-ui push-comment push-post push-mongodb-exporter push-blackbox-exporter push-alertmanager push-telegraf push-fluentd
 
 push-prometheus: ## Сохранение docker-образа prometheus в DockerHub (образ должен быть уже собран)
 	docker push $(USER_NAME)/prometheus:$(PROMETHEUS_TAG)
@@ -68,6 +71,8 @@ push-alertmanager: ## Сохранение docker-образа alertmanager в D
 	docker push $(USER_NAME)/alertmanager:$(ALERTMANAGER_TAG)
 push-telegraf: ## Сохранение docker-образа telegraf в DockerHub (образ должен быть уже собран)
 	docker push $(USER_NAME)/telegraf:$(TELEGRAF_TAG)
+push-fluentd: ## Сохранение docker-образа fluentd в DockerHub (образ должен быть уже собран)
+	docker push $(USER_NAME)/fluentd:$(FLUENTD_TAG)
 
 #===================================================== DOCKER-COMPOSE =====================================================================
 
@@ -75,14 +80,22 @@ docker-compose-up: ## Запуск application контейнеров с пом�
 	cd docker && \
 	docker-compose -f docker-compose.yml up -d
 
-docker-compose-up-monitoring: ## Запуск monitoring контейнеров с помощью docker-compose (docker-compose-monitoring.yml)
-	cd docker && \
-	docker-compose -p monitoring -f docker-compose-monitoring.yml up -d
-
 docker-compose-down: ## Остановка application контейнеров с помощью docker-compose (docker-compose.yml)
 	cd docker && \
 	docker-compose -f docker-compose.yml down
 
+docker-compose-up-monitoring: ## Запуск monitoring контейнеров с помощью docker-compose (docker-compose-monitoring.yml)
+	cd docker && \
+	docker-compose -p monitoring -f docker-compose-monitoring.yml up -d
+
 docker-compose-down-monitoring: ## Остановка monitoring контейнеров с помощью docker-compose (docker-compose-monitoring.yml)
 	cd docker && \
 	docker-compose -p monitoring -f docker-compose-monitoring.yml down
+
+docker-compose-up-logging: ## Запуск logging контейнеров с помощью docker-compose (docker-compose-logging.yml)
+	cd docker && \
+	docker-compose -f docker-compose-logging.yml up -d
+
+docker-compose-down-logging: ## Остановка logging контейнеров с помощью docker-compose (docker-compose-logging.yml)
+	cd docker && \
+	docker-compose -f docker-compose-logging.yml down

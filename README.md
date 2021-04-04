@@ -509,28 +509,28 @@ blackbox-exporter:
 
 ## Домашняя работа №23
 
-Создал окружение  
+Создал окружение
 ```
 export YC_FOLDER_ID=<ID>
 docker-machine create --driver=yandex --yandex-folder-id=$YC_FOLDER_ID --yandex-image-id=fd87uq4tagjupcnm376a --yandex-cores=2 --yandex-memory=2 --yandex-nat=true --yandex-sa-key-file key.json docker-host
 docker-machine env docker-host
 eval $(docker-machine env docker-host)
 ```
-Разлелил docker-compose.yml, все что касается мониторинга вынес в docker-compose-monitoring.yml.  
-Добавил в проект cAdvisor.  
-Добавил в проект Grafana. Добавил дашборды по инструкции.  
-Добавил в проект alertmanager, настроил отправку оповещений в slack.  
+Разлелил docker-compose.yml, все что касается мониторинга вынес в docker-compose-monitoring.yml.
+Добавил в проект cAdvisor.
+Добавил в проект Grafana. Добавил дашборды по инструкции.
+Добавил в проект alertmanager, настроил отправку оповещений в slack.
 
 ### Задание со *
 
-1. Дополнил Makefile  
-2. Включил экспериментальный режим в docker, чтобы напрямую отдавать метрики в prometheus, а не через node exporter.  
- 
-Для этого подключился к ВМ  
+1. Дополнил Makefile
+2. Включил экспериментальный режим в docker, чтобы напрямую отдавать метрики в prometheus, а не через node exporter.
+
+Для этого подключился к ВМ
 ```
 docker-machine ssh docker-host
 ```
-Создал файл конфигурации  
+Создал файл конфигурации
 ```
 sudo vi /etc/docker/daemon.json
 
@@ -539,13 +539,27 @@ sudo vi /etc/docker/daemon.json
   "experimental" : true
 }
 ```
-10.0.1.1 - первый адрес в сети front_net, можно было взять и back_net, контейнер prometheus смотрит и туда и туда.  
-Рестарт службы docker  
+10.0.1.1 - первый адрес в сети front_net, можно было взять и back_net, контейнер prometheus смотрит и туда и туда.
+Рестарт службы docker
 ```
 sudo systemctl restart docker
 ```
-Если данный метод сравнивать с Cadvisor, то Cadvisor лучше, так как имеет намного больше метрик. Дашбордов для мониторинга docker в этом режиме мало. Найденный дашборд сохранил в файл docker-engine-metrics_rev3.json  
+Если данный метод сравнивать с Cadvisor, то Cadvisor лучше, так как имеет намного больше метрик. Дашбордов для мониторинга docker в этом режиме мало. Найденный дашборд сохранил в файл docker-engine-metrics_rev3.json
 
-3. Добавил telegraf, метрик собирается мало. Я так и не нашел дашборда для docker.  
-4. В конфиг alermanager добавил отправку на email, через почту gmail. Главное в настройках профиля google - безопасность - Небезопасные приложения разрешены (включить)  
+3. Добавил telegraf, метрик собирается мало. Я так и не нашел дашборда для docker.
+4. В конфиг alermanager добавил отправку на email, через почту gmail. Главное в настройках профиля google - безопасность - Небезопасные приложения разрешены (включить)
 Ссылка на DockerHub https://hub.docker.com/u/dvparshin
+
+## Домашняя работа №25
+
+Новая версия приложения из методички не работает! Использовал ту же версию с которой и работали ранее.  
+В docker_build.sh изменил тэг на logging, также заменил в .env  
+Драйвер docker-machine для YC использовал уже давно.  
+Создал docker-compose-logging.yml для развертывания стека EFK  
+Создал Dockerﬁle и конфигурацию для Fluentd  
+Настроил отправку логов во Fluentd для сервиса post (структурированные логи)  
+Настроил индекс для Kibana потыкал поиск по логам.  
+Добавил фильтр во Fluentd для сервиса post  
+Настроил отправку логов во Fluentd для сервиса ui и добавил фильтры для парсинга неструктурированных логов  
+Добавил Grok-шаблоны  
+Добавил Zipkin в проект и посмотрел его работу  
